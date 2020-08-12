@@ -1,0 +1,15 @@
+.lib/
+.idea/
+.stack-work/
+
+out/
+
+*~
+*.iml
+*.ipr
+*.iws
+
+data
+tags
+pamela.cabal
+stack.yaml.lock
