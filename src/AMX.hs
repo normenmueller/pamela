@@ -51,6 +51,16 @@ newtype Eid =
 instance IsString Eid where
     fromString = Eid . T.pack
 
+-- |Relationship identifier
+newtype Rid =
+    Rid
+        { unRid :: Text
+        }
+    deriving (Eq, Ord, Show)
+
+instance IsString Rid where
+    fromString = Rid . T.pack
+
 -- |A key
 newtype Key =
     Key
@@ -76,12 +86,25 @@ instance IsString Val where
 ------------------------------------------------------------------------------}
 
 -- |An element description
-data Elm = Elm
-    { elmID :: Eid
-    , elmName :: Text
-    , elmType :: Text
-    , elmProp :: Map Key Val
-    } deriving (Eq, Ord, Show)
+data Elm =
+    Elm
+        { elmID :: Eid
+        , elmName :: Text
+        , elmType :: Text
+        , elmProp :: Map Key Val
+        }
+    deriving (Eq, Ord, Show)
+
+-- |A relationship description
+data Rel =
+    Rel
+        { relID :: Rid
+        , relSrc :: Eid
+        , relTgt :: Eid
+        , relType :: Text
+        , relProp :: Map Key Val
+        }
+    deriving (Eq, Ord, Show)
 
 {------------------------------------------------------------------------------
   Property Definitions

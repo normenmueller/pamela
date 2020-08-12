@@ -22,6 +22,8 @@ module Lib
 import           Control.Monad.Reader
 import           Control.Monad.Trans
 import           Control.Monad.Writer
+import           Data.Map                          (Map)
+import qualified Data.Map                          as Map
 
 import           AMX                  as A
 import qualified Graph                as G
@@ -53,6 +55,13 @@ pamela = do
     let pds = A.propDefs doc
     -- elmID -> (elmId, elmName, elmType, elmProp)
     let els = A.elements pds doc
+    -- relID -> (relId, relSrc, relTgt, relType, relProp)
+    let rls = undefined
+
+    let ns = (\e -> undefined :: V) <$> Map.elems els
+    let es = (\r -> undefined :: E) <$> Map.elems rls
+
+    let g = G.mkGraph ns es
 
     tell . pure . show $ pds
     tell . pure $ "-------"
