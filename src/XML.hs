@@ -12,6 +12,7 @@ Portability : POSIX
 module XML
     ( module X
     , withStripedSpaces
+    , parse
     , hasLabel
     , label
     , content
@@ -20,6 +21,7 @@ module XML
 
 import           Data.Text            (Text)
 import qualified Data.Text            as T
+import           Prelude              hiding (readFile)
 import qualified System.Directory     as Sys
 import qualified System.Exit          as Sys (ExitCode (ExitFailure, ExitSuccess))
 import           System.FilePath      ((</>))
@@ -52,6 +54,15 @@ withStripedSpaces res act = do
             Sys.removeFile res'
   where
     xsltScript = "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" ><xsl:output method=\"xml\" indent=\"no\"/><xsl:strip-space elements=\"*\"/><xsl:template match=\"/\"><xsl:copy-of select=\".\"/></xsl:template></xsl:stylesheet>"
+
+{------------------------------------------------------------------------------
+  Parser
+------------------------------------------------------------------------------}
+
+parse :: FilePath -> IO Document
+parse = readFile dft
+  where
+    dft = def {psRetainNamespaces = True}
 
 {------------------------------------------------------------------------------
   Predicates

@@ -12,20 +12,34 @@ Portability : POSIX
 ...
 -}
 module AMX
-    ( propDefs
+    ( parse
+    , propDefs
     , elements
+    , relations
     ) where
 
 import           Data.List
-import           Data.Map                          (Map, (!))
-import qualified Data.Map                          as Map
+import           Data.Map                   (Map, (!))
+import qualified Data.Map                   as Map
 import           Data.Maybe
 import           Data.String
-import           Data.Text                         (Text)
-import qualified Data.Text                         as T
-import           Text.XML                          (Document (..), Element (..),
-                                                    Name (..), Node (..))
-import           XML
+import           Data.Text                  (Text)
+import qualified Data.Text                  as T
+import qualified XML                        as X
+
+{------------------------------------------------------------------------------
+  Parser
+------------------------------------------------------------------------------}
+
+parse :: X.Document -> (Map Eid Elm, Map Rid Rel)
+parse d =
+    -- propID -> Value
+    let pds = propDefs d
+    -- elmID -> (elmId, elmName, elmType, elmProp)
+        els = elements d pds
+    -- relID -> (relId, relSrc, relTgt, relType, relProp)
+        rls = relations d pds
+     in (els, rls)
 
 {------------------------------------------------------------------------------
   Type synonyms
@@ -99,9 +113,10 @@ data Elm =
 data Rel =
     Rel
         { relID :: Rid
+        , relName :: Maybe Text
+        , relType :: Text
         , relSrc :: Eid
         , relTgt :: Eid
-        , relType :: Text
         , relProp :: Map Key Val
         }
     deriving (Eq, Ord, Show)
@@ -110,57 +125,107 @@ data Rel =
   Property Definitions
 ------------------------------------------------------------------------------}
 
-propDefs :: Document -> Map Pid Val
-propDefs d@Document {..} =
-    case find (hasLabel lblPropDefs) (elementNodes documentRoot) of
-        Just (NodeElement e) -> foldl op z $ elementNodes e
+propDefs :: X.Document -> Map Pid Val
+propDefs d@X.Document {..} =
+    case find (X.hasLabel lblPropDefs) (X.elementNodes documentRoot) of
+        Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
         Nothing -> Map.empty
   where
     z = Map.empty
-    op m (NodeElement e) = Map.union m (propDef e)
+    op m (X.NodeElement e) = Map.union m (propDef e)
     op m _ = m
 
 -- Note: According to AMX XSD, `name` is the only child of an property
 -- definition.
-propDef :: Element -> Map Pid Val
-propDef (Element l as [c])
-    | l == lblPropDef = Map.singleton (Pid $ as ! attId) (Val $ text c)
+propDef :: X.Element -> Map Pid Val
+propDef (X.Element l as [c])
+    | l == lblPropDef =
+        case name c of
+            Just v -> Map.singleton (Pid $ as ! attId) (Val v)
+            Nothing -> Map.empty
 propDef _ = Map.empty
 
 {------------------------------------------------------------------------------
   Element description
 ------------------------------------------------------------------------------}
 
-elements :: Map Pid Val -> Document -> Map Eid Elm
-elements pds d@Document {..} =
-    case find (hasLabel lblElems) (elementNodes documentRoot) of
-        Just (NodeElement e) -> foldl op z $ elementNodes e
+elements :: X.Document -> Map Pid Val -> Map Eid Elm
+elements d@X.Document {..} pds =
+    case find (X.hasLabel lblElems) (X.elementNodes documentRoot) of
+        Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
         Nothing -> Map.empty
   where
     z = Map.empty
-    op m (NodeElement e) = Map.union m (element pds e)
+    op m (X.NodeElement e) = Map.union m (element pds e)
     op m _ = m
 
 -- Note: According to AMX XSD, `name` is the first child of an element.
-element :: Map Pid Val -> Element -> Map Eid Elm
-element pds (Element l as (n:ps))
+element :: Map Pid Val -> X.Element -> Map Eid Elm
+element pds (X.Element l as cs)
     | l == lblElem =
-        Map.singleton (Eid $ as ! attId) $
-        Elm (Eid $ as ! attId) (text n) (as ! attType) (props pds ps)
-element _ _ = Map.empty
+        case find (X.hasLabel lblName) cs of
+            Just n ->
+                Map.singleton (Eid $ as ! attId) $
+                Elm (Eid $ as ! attId) (text n) (as ! attType) (props pds cs)
+            Nothing -> error "Invalid AMX!"
+    | otherwise = Map.empty
 
-props ::  Map Pid Val -> [Node] -> Map Key Val
+{------------------------------------------------------------------------------
+  Relationship description
+------------------------------------------------------------------------------}
+
+relations :: X.Document -> Map Pid Val -> Map Rid Rel
+relations d@X.Document {..} pds =
+    case find (X.hasLabel lblRels) (X.elementNodes documentRoot) of
+        Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
+        Nothing -> Map.empty
+  where
+    z = Map.empty
+    op m (X.NodeElement e) = Map.union m (relation pds e)
+    op m _ = m
+
+relation :: Map Pid Val -> X.Element -> Map Rid Rel
+relation pds (X.Element l as cs)
+    | l == lblRel =
+        Map.singleton (Rid $ as ! attId) $
+        Rel
+            (Rid $ as ! attId)
+            (text <$> find (X.hasLabel lblName) cs)
+            (as ! attType)
+            (Eid $ as ! attSrc)
+            (Eid $ as ! attTgt)
+            (props pds cs)
+    | otherwise = Map.empty
+
+{------------------------------------------------------------------------------
+  Accessors
+------------------------------------------------------------------------------}
+
+name :: X.Node -> Maybe T.Text
+name (X.NodeElement (X.Element l _ [c]))
+    | l == lblName = X.content c
+name _ = Nothing
+
+-- Unsafe!
+text :: X.Node -> T.Text
+text n = fromMaybe (error "Invalid AMX!") (X.content n)
+
+{------------------------------------------------------------------------------
+  Properties
+------------------------------------------------------------------------------}
+
+props ::  Map Pid Val -> [X.Node] -> Map Key Val
 props pds ns =
-    case find (hasLabel lblProps) ns of
-        Just (NodeElement e) -> foldl op z $ elementNodes e
+    case find (X.hasLabel lblProps) ns of
+        Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
         Nothing -> z
   where
     z = Map.empty
-    op m (NodeElement e) = Map.union m (prop pds e)
+    op m (X.NodeElement e) = Map.union m (prop pds e)
     op m _ = m
 
-prop :: Map Pid Val -> Element -> Map Key Val
-prop pds (Element l as [c])
+prop :: Map Pid Val -> X.Element -> Map Key Val
+prop pds (X.Element l as [c])
     | l == lblProp =
         Map.singleton
             (Key . unVal $ pds ! (Pid $ as ! attPropDefRef))
@@ -168,79 +233,91 @@ prop pds (Element l as [c])
 prop _ _ = Map.empty
 
 {------------------------------------------------------------------------------
-  Conversion
-------------------------------------------------------------------------------}
-
--- Unsafe!
-text :: Node -> T.Text
-text n = fromMaybe (error "Invalid AMX!") (content n)
-
-{------------------------------------------------------------------------------
   Terminals
 ------------------------------------------------------------------------------}
 
 -- Attributes
 
-attId :: Name
+attId :: X.Name
 attId = "identifier"
 
-attType :: Name
+attSrc :: X.Name
+attSrc = "source"
+
+attTgt :: X.Name
+attTgt = "target"
+
+attType :: X.Name
 attType =
-    Name
+    X.Name
         "type"
         (Just "http://www.w3.org/2001/XMLSchema-instance")
         (Just "xsi")
 
-attPropDefRef :: Name
+attPropDefRef :: X.Name
 attPropDefRef = "propertyDefinitionRef"
 
 -- Labels
 
-lblElems :: Name
+lblElems :: X.Name
 lblElems =
-    Name
+    X.Name
         "elements"
         (Just "http://www.opengroup.org/xsd/archimate/3.0/")
         Nothing
 
-lblElem :: Name
+lblElem :: X.Name
 lblElem =
-    Name
+    X.Name
         "element"
         (Just "http://www.opengroup.org/xsd/archimate/3.0/")
         Nothing
 
-lblPropDefs :: Name
+lblRels :: X.Name
+lblRels =
+    X.Name
+        "relationships"
+        (Just "http://www.opengroup.org/xsd/archimate/3.0/")
+        Nothing
+
+lblRel :: X.Name
+lblRel =
+    X.Name
+        "relationship"
+        (Just "http://www.opengroup.org/xsd/archimate/3.0/")
+        Nothing
+
+lblPropDefs :: X.Name
 lblPropDefs =
-    Name
+    X.Name
         "propertyDefinitions"
         (Just "http://www.opengroup.org/xsd/archimate/3.0/")
         Nothing
 
-lblPropDef :: Name
+lblPropDef :: X.Name
 lblPropDef =
-    Name
+    X.Name
         "propertyDefinition"
         (Just "http://www.opengroup.org/xsd/archimate/3.0/")
         Nothing
 
-lblProps :: Name
+lblProps :: X.Name
 lblProps =
-    Name
+    X.Name
         "properties"
         (Just "http://www.opengroup.org/xsd/archimate/3.0/")
         Nothing
 
-lblProp :: Name
+lblProp :: X.Name
 lblProp =
-    Name
+    X.Name
         "property"
         (Just "http://www.opengroup.org/xsd/archimate/3.0/")
         Nothing
 
-lblName :: Name
+lblName :: X.Name
 lblName =
-    Name
+    X.Name
         "name"
         (Just "http://www.opengroup.org/xsd/archimate/3.0/")
         Nothing

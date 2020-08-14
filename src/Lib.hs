@@ -46,26 +46,12 @@ type Pamela a = Program Cfg [String] a
 pamela :: Pamela (Gr V E)
 pamela = do
     f <- asks cfgPath
-
-    doc <- liftIO $ X.readFile dft f
-    tell . pure $ "File '" <> f <> "' parsed"
-
-    -- XXX dedicated AMX env (ReaderT)
-    -- propID -> Value
-    let pds = A.propDefs doc
-    -- elmID -> (elmId, elmName, elmType, elmProp)
-    let els = A.elements pds doc
-    -- relID -> (relId, relSrc, relTgt, relType, relProp)
-    let rls = undefined
+    d <- liftIO $ X.parse f
+    (els, rls) <- pure $ A.parse d
 
     let ns = (\e -> undefined :: V) <$> Map.elems els
     let es = (\r -> undefined :: E) <$> Map.elems rls
-
     let g = G.mkGraph ns es
-
-    tell . pure . show $ pds
-    tell . pure $ "-------"
-    tell . pure . show $ els
 
     pure G.empty
   where
