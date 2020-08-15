@@ -60,9 +60,7 @@ withStripedSpaces res act = do
 ------------------------------------------------------------------------------}
 
 parse :: FilePath -> IO Document
-parse = readFile dft
-  where
-    dft = def {psRetainNamespaces = True}
+parse = readFile def {psRetainNamespaces = True}
 
 {------------------------------------------------------------------------------
   Predicates

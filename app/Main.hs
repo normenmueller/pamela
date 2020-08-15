@@ -9,12 +9,6 @@ Stability   : experimental
 Portability : POSIX
 
 Pamela's entry point.
-
-```
-  render . transform . parse
-~ dump   . valet     . slurp
-```
-
 -}
 module Main where
 

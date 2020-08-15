@@ -28,20 +28,6 @@ import qualified Data.Text                  as T
 import qualified XML                        as X
 
 {------------------------------------------------------------------------------
-  Parser
-------------------------------------------------------------------------------}
-
-parse :: X.Document -> (Map Eid Elm, Map Rid Rel)
-parse d =
-    -- propID -> Value
-    let pds = propDefs d
-    -- elmID -> (elmId, elmName, elmType, elmProp)
-        els = elements d pds
-    -- relID -> (relId, relSrc, relTgt, relType, relProp)
-        rls = relations d pds
-     in (els, rls)
-
-{------------------------------------------------------------------------------
   Type synonyms
 ------------------------------------------------------------------------------}
 
@@ -122,6 +108,15 @@ data Rel =
     deriving (Eq, Ord, Show)
 
 {------------------------------------------------------------------------------
+  Parser
+------------------------------------------------------------------------------}
+
+parse :: X.Document -> (Map Eid Elm, Map Rid Rel)
+parse d =
+    let pds = propDefs d
+     in (elements d pds, relations d pds)
+
+{------------------------------------------------------------------------------
   Property Definitions
 ------------------------------------------------------------------------------}
 
@@ -135,13 +130,11 @@ propDefs d@X.Document {..} =
     op m (X.NodeElement e) = Map.union m (propDef e)
     op m _ = m
 
--- Note: According to AMX XSD, `name` is the only child of an property
--- definition.
 propDef :: X.Element -> Map Pid Val
-propDef (X.Element l as [c])
+propDef (X.Element l as cs)
     | l == lblPropDef =
-        case name c of
-            Just v -> Map.singleton (Pid $ as ! attId) (Val v)
+        case find (X.hasLabel lblName) cs of
+            Just v -> Map.singleton (Pid $ as ! attId) (Val $ text v)
             Nothing -> Map.empty
 propDef _ = Map.empty
 
@@ -159,7 +152,6 @@ elements d@X.Document {..} pds =
     op m (X.NodeElement e) = Map.union m (element pds e)
     op m _ = m
 
--- Note: According to AMX XSD, `name` is the first child of an element.
 element :: Map Pid Val -> X.Element -> Map Eid Elm
 element pds (X.Element l as cs)
     | l == lblElem =

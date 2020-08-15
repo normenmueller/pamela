@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-|
 Module      : Lib
 Description : ...
@@ -22,12 +21,12 @@ module Lib
 import           Control.Monad.Reader
 import           Control.Monad.Trans
 import           Control.Monad.Writer
-import           Data.Map                          (Map)
-import qualified Data.Map                          as Map
+import           Data.Map             (Map)
+import qualified Data.Map             as Map
 
 import           AMX                  as A
-import qualified Graph                as G
 import           Graph                (E, Gr, V)
+import qualified Graph                as G
 import qualified XML                  as X
 
 type Log = [String]
