@@ -12,7 +12,9 @@ Portability : POSIX
 ...
 -}
 module AMX
-    ( parse
+    ( Elm(..)
+    , Rel(..)
+    , Eid
     , propDefs
     , elements
     , relations
@@ -108,15 +110,6 @@ data Rel =
     deriving (Eq, Ord, Show)
 
 {------------------------------------------------------------------------------
-  Parser
-------------------------------------------------------------------------------}
-
-parse :: X.Document -> (Map Eid Elm, Map Rid Rel)
-parse d =
-    let pds = propDefs d
-     in (elements d pds, relations d pds)
-
-{------------------------------------------------------------------------------
   Property Definitions
 ------------------------------------------------------------------------------}
 
@@ -142,14 +135,14 @@ propDef _ = Map.empty
   Element description
 ------------------------------------------------------------------------------}
 
-elements :: X.Document -> Map Pid Val -> Map Eid Elm
-elements d@X.Document {..} pds =
-    case find (X.hasLabel lblElems) (X.elementNodes documentRoot) of
-        Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
-        Nothing -> Map.empty
+elements :: X.Document -> Map Eid Elm
+elements d@X.Document {..} =
+     case find (X.hasLabel lblElems) (X.elementNodes documentRoot) of
+          Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
+          Nothing -> Map.empty
   where
     z = Map.empty
-    op m (X.NodeElement e) = Map.union m (element pds e)
+    op m (X.NodeElement e) = Map.union m (element (propDefs d) e)
     op m _ = m
 
 element :: Map Pid Val -> X.Element -> Map Eid Elm
@@ -166,14 +159,14 @@ element pds (X.Element l as cs)
   Relationship description
 ------------------------------------------------------------------------------}
 
-relations :: X.Document -> Map Pid Val -> Map Rid Rel
-relations d@X.Document {..} pds =
-    case find (X.hasLabel lblRels) (X.elementNodes documentRoot) of
+relations :: X.Document -> Map Rid Rel
+relations d@X.Document {..} =
+     case find (X.hasLabel lblRels) (X.elementNodes documentRoot) of
         Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
         Nothing -> Map.empty
   where
     z = Map.empty
-    op m (X.NodeElement e) = Map.union m (relation pds e)
+    op m (X.NodeElement e) = Map.union m (relation (propDefs d) e)
     op m _ = m
 
 relation :: Map Pid Val -> X.Element -> Map Rid Rel

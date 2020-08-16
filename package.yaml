@@ -36,7 +36,6 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
-    - Lib
     - XML
     - AMX
     - Graph

@@ -16,11 +16,11 @@ import qualified AMX as A
 import qualified Graph as G
 import qualified XML as X
 import           XML (withStripedSpaces)
-import           Lib
 
 main :: IO ()
 main =
     withStripedSpaces "./tst/in0.xml" $ \p -> do
-        (g, log) <- runProgram pamela $ Cfg p
-        G.prettyPrint g
-        mapM_ putStrLn log
+        g <- G.fromDocument <$> X.parse p
+        c <- pure $ G.toCypher g
+        --G.prettyPrint g
+        putStrLn c
