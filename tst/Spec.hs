@@ -26,7 +26,7 @@ main = hspec $ do
             X.withStripedSpaces "./tst/in0.xml" $ \amx -> do
               doc <- liftIO $ X.readFile dft amx
               exp <- liftIO $ readFile "./tst/exp0.txt"
-              let res = A.elements doc (A.propDefs doc)
+              let res = A.elements doc
 
               let exp' = init $ replace "\\\"" "\"" exp
               let res' = replace "\\\"" "\"" $ show res

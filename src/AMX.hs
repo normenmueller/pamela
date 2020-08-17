@@ -64,24 +64,26 @@ instance IsString Rid where
     fromString = Rid . T.pack
 
 -- |A key
-newtype Key =
-    Key
-        { unKey :: Text
-        }
-    deriving (Eq, Ord, Show)
-
-instance IsString Key where
-    fromString = Key . T.pack
+type Key = Text
+--newtype Key =
+--    Key
+--        { unKey :: Text
+--        }
+--    deriving (Eq, Ord, Show)
+--
+--instance IsString Key where
+--    fromString = Key . T.pack
 
 -- |A value
-newtype Val =
-    Val
-        { unVal :: Text
-        }
-    deriving (Eq, Ord, Show)
-
-instance IsString Val where
-    fromString = Val . T.pack
+type Val = Text
+--newtype Val =
+--    Val
+--        { unVal :: Text
+--        }
+--    deriving (Eq, Ord, Show)
+--
+--instance IsString Val where
+--    fromString = Val . T.pack
 
 {------------------------------------------------------------------------------
   Types
@@ -127,7 +129,7 @@ propDef :: X.Element -> Map Pid Val
 propDef (X.Element l as cs)
     | l == lblPropDef =
         case find (X.hasLabel lblName) cs of
-            Just v -> Map.singleton (Pid $ as ! attId) (Val $ text v)
+            Just v -> Map.singleton (Pid $ as ! attId) (text v)
             Nothing -> Map.empty
 propDef _ = Map.empty
 
@@ -211,10 +213,7 @@ props pds ns =
 
 prop :: Map Pid Val -> X.Element -> Map Key Val
 prop pds (X.Element l as [c])
-    | l == lblProp =
-        Map.singleton
-            (Key . unVal $ pds ! (Pid $ as ! attPropDefRef))
-            (Val $ text c)
+    | l == lblProp = Map.singleton (pds ! (Pid $ as ! attPropDefRef)) (text c)
 prop _ _ = Map.empty
 
 {------------------------------------------------------------------------------
