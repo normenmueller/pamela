@@ -14,7 +14,7 @@ Portability : POSIX
 module AMX
     ( Elm(..)
     , Rel(..)
-    , Eid
+    , Eid(..)
     , propDefs
     , elements
     , relations

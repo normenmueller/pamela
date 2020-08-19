@@ -12,15 +12,15 @@ Pamela's entry point.
 -}
 module Main where
 
-import qualified AMX as A
-import qualified Graph as G
-import qualified XML as X
-import           XML (withStripedSpaces)
+import qualified AMX          as A
+import qualified Data.Text.IO as T
+import qualified Graph        as G
+import           XML          (withStripedSpaces)
+import qualified XML          as X
 
 main :: IO ()
 main =
-    withStripedSpaces "./tst/in0.xml" $ \p -> do
+   withStripedSpaces "./tst/in0.xml" $ \p -> do
         g <- G.fromDocument <$> X.parse p
         c <- pure $ G.toCypher g
-        --G.prettyPrint g
-        putStrLn c
+        T.putStrLn c

@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-|
 Module      : Graph
@@ -11,50 +12,60 @@ Portability : POSIX
 ...
 -}
 module Graph
-    ( module I
-    , I.prettyPrint
-    , fromDocument
+    ( fromDocument
     , toCypher
     ) where
 
+import           Control.Monad              (mfilter)
 import qualified Data.Graph.Inductive       as I
 import qualified Data.Graph.Inductive.Graph as I
 import           Data.List
 import           Data.Map                   ((!))
 import qualified Data.Map                   as Map
-import           Data.String
+import           Data.Maybe
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 
 import           AMX                  as A
 import qualified XML                  as X
+import           Utils
 
 fromDocument :: X.Document -> I.Gr A.Elm A.Rel
 fromDocument d =
-    let (els, rls) = (A.elements d, A.relations d)
+    let (els, rls) = (,) <$> A.elements <*> A.relations $ d
         ns = [1..] `zip` Map.elems els
         idx = Map.fromList $ (\(ni, e) -> (elmID e, ni)) <$> ns
         es = (\r -> (idx ! relSrc r, idx ! relTgt r, r)) <$> Map.elems rls
      in I.mkGraph ns es
 
-toCypher :: I.Gr A.Elm A.Rel -> String
-toCypher g =
-    let srcs = I.nodes g
-        src = head srcs
-        sinf :: Maybe A.Elm
-        sinf = I.lab g src
-        tgts = I.suc g src
-     in concat
-            [ "src:\n", show $ cqlElm <$> I.lab g src, "\n"
-            , "------------\n"
-            , "tgts:\n", show $ I.lab g <$> tgts
-            ]
+toCypher :: I.Gr A.Elm A.Rel -> Text
+toCypher g = "CREATE " <> T.intercalate "," ((++) <$> cqlElms <*> cqlRels $ g)
+
+cqlElms :: I.Gr A.Elm A.Rel -> [Text]
+cqlElms g = foldl (\acc (_, e) -> cqlElm e : acc) [] $ I.labNodes g
 
 cqlElm :: A.Elm -> Text
 cqlElm e =
-    let var = elmName e
-        typ = elmType e
-        ps  = elmProp e
-        ps' = Map.assocs ps
-        ps''  = T.intercalate (T.pack ",") $ (\(k,v) -> k <> T.pack ":'" <> v <> T.pack "'") <$> ps'
-     in T.pack "(`" <> var <> T.pack "`:" <> typ <> T.pack " {" <> ps'' <> T.pack "})"
+    let v = T.replace "-" "_" $ A.unEid . elmID $ e
+        y = elmType e
+        ps =
+            T.intercalate "," $
+            (\(k, v) -> k <> ":'" <> v <> "'") <$>
+            ("name", elmName e) : Map.assocs (elmProp e)
+     in "(" <> v <> ":" <> y <> " {" <> ps <> "})"
+
+cqlRels :: I.Gr A.Elm A.Rel -> [Text]
+cqlRels g = foldl (\acc (_, _, r) -> cqlRel r : acc) [] $ I.labEdges g
+
+cqlRel :: A.Rel -> Text
+cqlRel e =
+    let v = T.replace "-" "_" $ fromMaybe T.empty $ relName e
+        y = relType e
+        src = T.replace "-" "_" $ A.unEid . relSrc $ e
+        tgt = T.replace "-" "_" $ A.unEid . relTgt $ e
+        ps =
+            T.intercalate "," $
+            (\(k, v) -> k <> ":'" <> v <> "'") <$> Map.assocs (relProp e)
+     in "(" <> src <> ")" <>
+        "-[" <> v <> ":" <> y <> " {" <> ps <> "}]->" <>
+        "(" <> tgt <> ")"

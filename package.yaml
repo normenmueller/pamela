@@ -39,6 +39,7 @@ library:
     - XML
     - AMX
     - Graph
+    - Utils
 
 executables:
   pamela-exe:
