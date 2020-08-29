@@ -17,18 +17,18 @@ main = hspec $ do
         it "read in adequately" $
             X.withStripedSpaces "./tst/in0.xml" $ \amx -> do
               doc <- liftIO $ X.readFile dft amx
-              let exp = Map.fromList [("propid-1","author"),("propid-2","version"),("propid-3","relates-to"),("propid-4","status"),("propid-5","context"),("propid-6","scope")]
+              let exp = Map.fromList [("propid-1","author"),("propid-2","version"),("propid-3","relatesTo"),("propid-4","status"),("propid-5","context"),("propid-6","scope")]
                   res = A.propDefs doc
               res `shouldBe` exp
-    -- XXX Evil equality :-( To be adapted/ removed!
+    -- XXX Evil equality :-( To be removed!
     describe "Elements are" $
         it "read in adequately" $
             X.withStripedSpaces "./tst/in0.xml" $ \amx -> do
               doc <- liftIO $ X.readFile dft amx
-              exp <- liftIO $ readFile "./tst/exp0.txt"
               let res = A.elements doc
+              exp <- liftIO $ readFile "./tst/exp0.txt"
 
-              let exp' = init $ replace "\\\"" "\"" exp
+              let exp' = replace "\\\"" "\"" $ init exp
               let res' = replace "\\\"" "\"" $ show res
 
               res' `shouldBe` exp'

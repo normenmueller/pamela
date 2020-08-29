@@ -9,6 +9,7 @@ stack --silent unpack directory --to ${DIR}/.lib
 stack --silent unpack filepath --to ${DIR}/.lib
 stack --silent unpack fgl --to ${DIR}/.lib
 stack --silent unpack mtl --to ${DIR}/.lib
+stack --silent unpack reducers --to ${DIR}/.lib
 stack --silent unpack temporary --to ${DIR}/.lib
 stack --silent unpack text --to ${DIR}/.lib
 stack --silent unpack transformers --to ${DIR}/.lib

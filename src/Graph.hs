@@ -17,12 +17,15 @@ module Graph
     ) where
 
 import           Control.Monad              (mfilter)
+import           Data.Char                  (isSpace)
 import qualified Data.Graph.Inductive       as I
 import qualified Data.Graph.Inductive.Graph as I
 import           Data.List
+import           Data.List.Split
 import           Data.Map                   ((!))
 import qualified Data.Map                   as Map
 import           Data.Maybe
+import           Data.String
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 
@@ -50,7 +53,7 @@ cqlElm e =
         y = elmType e
         ps =
             T.intercalate "," $
-            (\(k, v) -> k <> ":'" <> v <> "'") <$>
+            (\(k, v) -> k <> ":" <> cqlPropV v) <$>
             ("name", elmName e) : Map.assocs (elmProp e)
      in "(" <> v <> ":" <> y <> " {" <> ps <> "})"
 
@@ -65,7 +68,22 @@ cqlRel e =
         tgt = T.replace "-" "_" $ A.unEid . relTgt $ e
         ps =
             T.intercalate "," $
-            (\(k, v) -> k <> ":'" <> v <> "'") <$> Map.assocs (relProp e)
+            (\(k, v) -> k <> ":" <> cqlPropV v) <$> Map.assocs (relProp e)
      in "(" <> src <> ")" <>
         "-[" <> v <> ":" <> y <> " {" <> ps <> "}]->" <>
         "(" <> tgt <> ")"
+
+newtype NoQuotes = NoQuotes String
+
+instance Show NoQuotes where show (NoQuotes str) = str
+
+cqlPropV :: A.Val -> Text
+cqlPropV x =
+    case splitOn "," $ T.unpack x of
+        [v] -> "'" <> (T.pack . trim $ v) <> "'"
+        vs -> T.pack . show $ (\v -> NoQuotes $ "'" <> trim v <> "'") <$> vs
+
+trim :: String -> String
+trim = T.unpack . T.strip . T.pack
+--trim = f . f
+--   where f = reverse . dropWhile isSpace

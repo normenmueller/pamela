@@ -12,9 +12,11 @@ Portability : POSIX
 ...
 -}
 module AMX
-    ( Elm(..)
+    ( Eid(..)
+    , Elm(..)
     , Rel(..)
-    , Eid(..)
+    , Key
+    , Val
     , propDefs
     , elements
     , relations
