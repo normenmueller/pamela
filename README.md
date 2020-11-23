@@ -1,6 +1,6 @@
 # pamela
 
-`pamela` gra**P**hify [**A**rchimate **M**odel **E**xchange fi**L**e form**A**t](https://www.opengroup.org/open-group-archimate-model-exchange-file-format).
+`pamela`, gra**P**hify [**A**rchimate **M**odel **E**xchange fi**L**e form**A**t](https://www.opengroup.org/open-group-archimate-model-exchange-file-format), slurps a model, represented in the [Open Group ArchiMate Model Exchange File Format](https://www.opengroup.org/open-group-archimate-model-exchange-file-format) and flushes a corresponding [Cypher](https://neo4j.com/developer/cypher/) representation.
 
 # Installation
 
