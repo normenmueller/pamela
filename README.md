@@ -47,7 +47,7 @@ Usage information is available via `pamela -h`.
 
 # License
 
-See [LICENSE](https://github.com/normenmueller/armlet/blob/master/LICENSE) for
+See [LICENSE](https://github.com/normenmueller/pamela/blob/master/LICENSE) for
 details.
 
 © 2020 Normen Müller
