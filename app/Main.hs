@@ -12,14 +12,31 @@ Pamela's entry point.
 -}
 module Main where
 
-import qualified Data.Text.IO as TIO
-import qualified Graph        as G
-import           XML          (withStripedSpaces)
-import qualified XML          as X
+import           Cmdln
+import           Control.Monad ((=<<))
+import           Data.SemVer
+import qualified Data.Text.IO  as TIO
+import qualified Graph         as G
+import           Options.Applicative
+import           XML           (withStripedSpaces)
+import qualified XML           as X
+
+{------------------------------------------------------------------------------
+  Entry
+-------------------------------------------------------------------------------}
 
 main :: IO ()
-main =
-   withStripedSpaces "./tst/in0.xml" $ \p -> do
-        g <- G.fromDocument <$> X.parse p
-        c <- pure $ G.toCypher g
-        TIO.putStrLn c
+main = pamela =<< cmdln
+
+{------------------------------------------------------------------------------
+  Punk
+-------------------------------------------------------------------------------}
+
+pamela :: Opt -> IO ()
+pamela (Opt to from) =
+    withStripedSpaces from $ \p -> do
+         g <- G.fromDocument <$> X.parse p
+         c <- pure $ G.toCypher g
+         case to of
+            Just to -> TIO.writeFile to c
+            Nothing -> TIO.putStrLn c

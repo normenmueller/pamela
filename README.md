@@ -1,6 +1,6 @@
 # pamela
 
-`pamela` gra**P**hifies [**A**rchimate **M**odel **E**xchange fi**L**e form**A**t](https://www.opengroup.org/open-group-archimate-model-exchange-file-format).
+`pamela` gra**P**hify [**A**rchimate **M**odel **E**xchange fi**L**e form**A**t](https://www.opengroup.org/open-group-archimate-model-exchange-file-format).
 
 # Installation
 
