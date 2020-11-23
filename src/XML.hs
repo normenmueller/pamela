@@ -19,7 +19,6 @@ module XML
     , remove
     ) where
 
-import           Data.Text            (Text)
 import qualified Data.Text            as T
 import           Prelude              hiding (readFile)
 import qualified System.Directory     as Sys

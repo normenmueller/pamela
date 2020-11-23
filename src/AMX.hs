@@ -17,18 +17,26 @@ module AMX
     , Rel(..)
     , Key
     , Val
-    , propDefs
     , elements
-    , relations
+    , elements'
+    , relationships
+    , relationships'
+    , organizations
+    , organizations'
+    , propertyDefinitions
     ) where
 
-import           Data.List
+import           Control.Monad.Trans.State
+import           Data.List                  (find)
 import           Data.Map                   (Map, (!))
 import qualified Data.Map                   as Map
 import           Data.Maybe
+import           Data.Set                   (Set)
+import qualified Data.Set                   as Set
 import           Data.String
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
+import           Data.Tree
 import qualified XML                        as X
 
 {------------------------------------------------------------------------------
@@ -114,28 +122,6 @@ data Rel =
     deriving (Eq, Ord, Show)
 
 {------------------------------------------------------------------------------
-  Property Definitions
-------------------------------------------------------------------------------}
-
-propDefs :: X.Document -> Map Pid Val
-propDefs d@X.Document {..} =
-    case find (X.hasLabel lblPropDefs) (X.elementNodes documentRoot) of
-        Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
-        Nothing -> Map.empty
-  where
-    z = Map.empty
-    op m (X.NodeElement e) = Map.union m (propDef e)
-    op m _ = m
-
-propDef :: X.Element -> Map Pid Val
-propDef (X.Element l as cs)
-    | l == lblPropDef =
-        case find (X.hasLabel lblName) cs of
-            Just v -> Map.singleton (Pid $ as ! attId) (text v)
-            Nothing -> Map.empty
-propDef _ = Map.empty
-
-{------------------------------------------------------------------------------
   Element description
 ------------------------------------------------------------------------------}
 
@@ -146,7 +132,7 @@ elements d@X.Document {..} =
           Nothing -> Map.empty
   where
     z = Map.empty
-    op m (X.NodeElement e) = Map.union m (element (propDefs d) e)
+    op m (X.NodeElement e) = Map.union m (element (propertyDefinitions d) e)
     op m _ = m
 
 element :: Map Pid Val -> X.Element -> Map Eid Elm
@@ -159,22 +145,41 @@ element pds (X.Element l as cs)
             Nothing -> error "Invalid AMX!"
     | otherwise = Map.empty
 
+elements' :: X.Document -> Set Elm
+elements' d@X.Document {..} =
+     case find (X.hasLabel lblElems) (X.elementNodes documentRoot) of
+          Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
+          Nothing -> Set.empty
+  where
+    z = Set.empty
+    op m (X.NodeElement e) = Set.union m (element' (propertyDefinitions d) e)
+    op m _ = m
+
+element' :: Map Pid Val -> X.Element -> Set Elm
+element' pds (X.Element l as cs)
+    | l == lblElem =
+        case find (X.hasLabel lblName) cs of
+            Just n ->
+                Set.singleton $ Elm (Eid $ as ! attId) (text n) (as ! attType) (props pds cs)
+            Nothing -> error "Invalid AMX!"
+    | otherwise = Set.empty
+
 {------------------------------------------------------------------------------
   Relationship description
 ------------------------------------------------------------------------------}
 
-relations :: X.Document -> Map Rid Rel
-relations d@X.Document {..} =
+relationships :: X.Document -> Map Rid Rel
+relationships d@X.Document {..} =
      case find (X.hasLabel lblRels) (X.elementNodes documentRoot) of
         Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
         Nothing -> Map.empty
   where
     z = Map.empty
-    op m (X.NodeElement e) = Map.union m (relation (propDefs d) e)
+    op m (X.NodeElement e) = Map.union m (relationship (propertyDefinitions d) e)
     op m _ = m
 
-relation :: Map Pid Val -> X.Element -> Map Rid Rel
-relation pds (X.Element l as cs)
+relationship :: Map Pid Val -> X.Element -> Map Rid Rel
+relationship pds (X.Element l as cs)
     | l == lblRel =
         Map.singleton (Rid $ as ! attId) $
         Rel
@@ -186,21 +191,108 @@ relation pds (X.Element l as cs)
             (props pds cs)
     | otherwise = Map.empty
 
+relationships' :: X.Document -> Set Rel
+relationships' d@X.Document {..} =
+    case find (X.hasLabel lblRels) (X.elementNodes documentRoot) of
+        Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
+        Nothing -> Set.empty
+  where
+    z = Set.empty
+    op m (X.NodeElement e) =
+        Set.union m (relationship' (propertyDefinitions d) e)
+    op m _ = m
+
+relationship' :: Map Pid Val -> X.Element -> Set Rel
+relationship' pds (X.Element l as cs)
+    | l == lblRel =
+        Set.singleton $
+        Rel
+            (Rid $ as ! attId)
+            (text <$> find (X.hasLabel lblName) cs)
+            (as ! attType)
+            (Eid $ as ! attSrc)
+            (Eid $ as ! attTgt)
+            (props pds cs)
+    | otherwise = Set.empty
+
+{------------------------------------------------------------------------------
+  Organizations description
+------------------------------------------------------------------------------}
+
+organizations' :: X.Document -> Tree Text
+organizations' d =
+    let t = organizations d
+        t' = recnum t
+     in t'
+
+organizations :: X.Document -> Tree Text
+organizations X.Document {..} =
+    Node
+        "organizations"
+        (case find (X.hasLabel lblOrgs) (X.elementNodes documentRoot) of
+             Just (X.NodeElement e) ->
+                 fromMaybe [] (traverse organization $ X.elementNodes e)
+             Nothing -> [])
+
+organization :: X.Node -> Maybe (Tree Text)
+organization (X.NodeElement (X.Element l as (c:cs)))
+    | l == lblItm =
+        Just $
+        if Map.null as
+            then Node (text c) (fromMaybe [] (traverse organization cs))
+            else Node (as ! attIdRef) []
+organization _ = Nothing
+
+recnum :: Tree Text -> Tree Text
+recnum tree = evalState (tag tree) [1]
+
+tag :: Tree Text -> State [Int] (Tree Text)
+tag (Node l subtrees) = do
+    counter <- get
+    put (1 : counter)
+    subtrees' <- mapM tag subtrees
+    put (head counter + 1 : tail counter)
+    let l' =
+            T.pack $
+            "fld-" <> (concatMap show . reverse $ counter) <> "-" <> T.unpack l
+    return $ Node l' subtrees'
+
+{------------------------------------------------------------------------------
+  Property definitions
+------------------------------------------------------------------------------}
+
+propertyDefinitions :: X.Document -> Map Pid Val
+propertyDefinitions X.Document {..} =
+    case find (X.hasLabel lblPropDefs) (X.elementNodes documentRoot) of
+        Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
+        Nothing -> Map.empty
+  where
+    z = Map.empty
+    op m e = Map.union m (propertyDefinition e)
+
+propertyDefinition :: X.Node -> Map Pid Val
+propertyDefinition (X.NodeElement (X.Element l as cs))
+    | l == lblPropDef =
+        case find (X.hasLabel lblName) cs of
+            Just v -> Map.singleton (Pid $ as ! attId) (text v)
+            Nothing -> Map.empty
+propertyDefinition _ = Map.empty
+
 {------------------------------------------------------------------------------
   Accessors
 ------------------------------------------------------------------------------}
 
-name :: X.Node -> Maybe T.Text
-name (X.NodeElement (X.Element l _ [c]))
-    | l == lblName = X.content c
-name _ = Nothing
+--name :: X.Node -> Maybe T.Text
+--name (X.NodeElement (X.Element l _ [c]))
+--    | l == lblName = X.content c
+--name _ = Nothing
 
 -- Unsafe!
 text :: X.Node -> T.Text
 text n = fromMaybe (error "Invalid AMX!") (X.content n)
 
 {------------------------------------------------------------------------------
-  Properties
+  Element rsp. relationship properties
 ------------------------------------------------------------------------------}
 
 props ::  Map Pid Val -> [X.Node] -> Map Key Val
@@ -215,7 +307,7 @@ props pds ns =
 
 prop :: Map Pid Val -> X.Element -> Map Key Val
 prop pds (X.Element l as [c])
-    | l == lblProp = Map.singleton (pds ! (Pid $ as ! attPropDefRef)) (text c)
+    | l == lblProp = Map.singleton (pds ! Pid (as ! attPropDefRef)) (text c)
 prop _ _ = Map.empty
 
 {------------------------------------------------------------------------------
@@ -226,6 +318,9 @@ prop _ _ = Map.empty
 
 attId :: X.Name
 attId = "identifier"
+
+attIdRef :: X.Name
+attIdRef = "identifierRef"
 
 attSrc :: X.Name
 attSrc = "source"
@@ -244,6 +339,20 @@ attPropDefRef :: X.Name
 attPropDefRef = "propertyDefinitionRef"
 
 -- Labels
+
+lblOrgs :: X.Name
+lblOrgs =
+    X.Name
+        "organizations"
+        (Just "http://www.opengroup.org/xsd/archimate/3.0/")
+        Nothing
+
+lblItm :: X.Name
+lblItm =
+    X.Name
+        "item"
+        (Just "http://www.opengroup.org/xsd/archimate/3.0/")
+        Nothing
 
 lblElems :: X.Name
 lblElems =
@@ -307,3 +416,10 @@ lblName =
         "name"
         (Just "http://www.opengroup.org/xsd/archimate/3.0/")
         Nothing
+
+--lblLabel :: X.Name
+--lblLabel =
+--    X.Name
+--        "label"
+--        (Just "http://www.opengroup.org/xsd/archimate/3.0/")
+--        Nothing

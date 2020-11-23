@@ -12,15 +12,23 @@ Pamela's entry point.
 -}
 module Main where
 
-import qualified AMX          as A
-import qualified Data.Text.IO as T
+import qualified Data.Text    as T
+import qualified Data.Text.IO as TIO
 import qualified Graph        as G
 import           XML          (withStripedSpaces)
 import qualified XML          as X
 
+import qualified AMX as A
+import           Data.Tree
+
 main :: IO ()
 main =
    withStripedSpaces "./tst/in0.xml" $ \p -> do
-        g <- G.fromDocument <$> X.parse p
-        c <- pure $ G.toCypher g
-        T.putStrLn c
+        g <- A.organizations' <$> X.parse p
+        putStrLn . drawTree $ fmap T.unpack g
+--main :: IO ()
+--main =
+--   withStripedSpaces "./tst/in0.xml" $ \p -> do
+--        g <- G.fromDocument <$> X.parse p
+--        c <- pure $ G.toCypher g
+--        T.putStrLn c

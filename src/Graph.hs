@@ -16,29 +16,33 @@ module Graph
     , toCypher
     ) where
 
-import           Control.Monad              (mfilter)
-import           Data.Char                  (isSpace)
 import qualified Data.Graph.Inductive       as I
-import qualified Data.Graph.Inductive.Graph as I
-import           Data.List
 import           Data.List.Split
 import           Data.Map                   ((!))
 import qualified Data.Map                   as Map
+import qualified Data.Set                   as Set
 import           Data.Maybe
-import           Data.String
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 
 import           AMX                  as A
 import qualified XML                  as X
-import           Utils
+
+-- TODO Add 'organizations'
+--fromDocument :: X.Document -> I.Gr A.Elm A.Rel
+--fromDocument d =
+--    let (els, rls) = (,) <$> A.elements <*> A.relationships $ d
+--        ns = [1..] `zip` Map.elems els
+--        idx = Map.fromList $ (\(i, e) -> (elmID e, i)) <$> ns
+--        es = (\r -> (idx ! relSrc r, idx ! relTgt r, r)) <$> Map.elems rls
+--     in I.mkGraph ns es
 
 fromDocument :: X.Document -> I.Gr A.Elm A.Rel
 fromDocument d =
-    let (els, rls) = (,) <$> A.elements <*> A.relations $ d
-        ns = [1..] `zip` Map.elems els
-        idx = Map.fromList $ (\(ni, e) -> (elmID e, ni)) <$> ns
-        es = (\r -> (idx ! relSrc r, idx ! relTgt r, r)) <$> Map.elems rls
+    let (els, rls) = (,) <$> A.elements' <*> A.relationships' $ d
+        ns = [1..] `zip` Set.elems els
+        idx = Map.fromList $ (\(i, e) -> (elmID e, i)) <$> ns
+        es = (\r -> (idx ! relSrc r, idx ! relTgt r, r)) <$> Set.elems rls
      in I.mkGraph ns es
 
 toCypher :: I.Gr A.Elm A.Rel -> Text
@@ -49,28 +53,28 @@ cqlElms g = foldl (\acc (_, e) -> cqlElm e : acc) [] $ I.labNodes g
 
 cqlElm :: A.Elm -> Text
 cqlElm e =
-    let v = T.replace "-" "_" $ A.unEid . elmID $ e
-        y = elmType e
+    let id = T.replace "-" "_" $ A.unEid . elmID $ e
+        ty = elmType e
         ps =
             T.intercalate "," $
             (\(k, v) -> k <> ":" <> cqlPropV v) <$>
             ("name", elmName e) : Map.assocs (elmProp e)
-     in "(" <> v <> ":" <> y <> " {" <> ps <> "})"
+     in "(" <> id <> ":" <> ty <> " {" <> ps <> "})"
 
 cqlRels :: I.Gr A.Elm A.Rel -> [Text]
 cqlRels g = foldl (\acc (_, _, r) -> cqlRel r : acc) [] $ I.labEdges g
 
 cqlRel :: A.Rel -> Text
 cqlRel e =
-    let v = T.replace "-" "_" $ fromMaybe T.empty $ relName e
-        y = relType e
+    let id = T.replace "-" "_" $ fromMaybe T.empty $ relName e
+        ty = relType e
         src = T.replace "-" "_" $ A.unEid . relSrc $ e
         tgt = T.replace "-" "_" $ A.unEid . relTgt $ e
         ps =
             T.intercalate "," $
             (\(k, v) -> k <> ":" <> cqlPropV v) <$> Map.assocs (relProp e)
      in "(" <> src <> ")" <>
-        "-[" <> v <> ":" <> y <> " {" <> ps <> "}]->" <>
+        "-[" <> id <> ":" <> ty <> " {" <> ps <> "}]->" <>
         "(" <> tgt <> ")"
 
 newtype NoQuotes = NoQuotes String
