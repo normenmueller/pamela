@@ -28,18 +28,9 @@ import qualified Data.Text                  as T
 import           AMX                  as A
 import qualified XML                  as X
 
--- TODO Add 'organizations'
---fromDocument :: X.Document -> I.Gr A.Elm A.Rel
---fromDocument d =
---    let (els, rls) = (,) <$> A.elements <*> A.relationships $ d
---        ns = [1..] `zip` Map.elems els
---        idx = Map.fromList $ (\(i, e) -> (elmID e, i)) <$> ns
---        es = (\r -> (idx ! relSrc r, idx ! relTgt r, r)) <$> Map.elems rls
---     in I.mkGraph ns es
-
 fromDocument :: X.Document -> I.Gr A.Elm A.Rel
 fromDocument d =
-    let (els, rls) = (,) <$> A.elements' <*> A.relationships' $ d
+    let (els, rls) = (,) <$> A.elements <*> A.relationships $ d
         ns = [1..] `zip` Set.elems els
         idx = Map.fromList $ (\(i, e) -> (elmID e, i)) <$> ns
         es = (\r -> (idx ! relSrc r, idx ! relTgt r, r)) <$> Set.elems rls
@@ -77,9 +68,11 @@ cqlRel e =
         "-[" <> id <> ":" <> ty <> " {" <> ps <> "}]->" <>
         "(" <> tgt <> ")"
 
-newtype NoQuotes = NoQuotes String
+newtype NoQuotes =
+    NoQuotes String
 
-instance Show NoQuotes where show (NoQuotes str) = str
+instance Show NoQuotes where
+    show (NoQuotes str) = str
 
 cqlPropV :: A.Val -> Text
 cqlPropV x =
