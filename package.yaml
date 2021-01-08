@@ -4,21 +4,11 @@ github:              "normenmueller/pamela"
 license:             BSD3
 author:              "Normen Müller"
 maintainer:          "normen.mueller@gmail.com"
-copyright:           "Copyright: (c) 2020 Normen Müller"
-
+copyright:           "Copyright: (c) 2020-21 Normen Müller"
+description:         Please see the README on GitHub at <https://github.com/normenmueller/pamela#readme>
 extra-source-files:
 - README.md
 - HISTORY.md
-
-# Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Simple
-
-# To avoid duplicated efforts in documentation and dealing with the
-# complications of embedding Haddock markup inside cabal files, it is
-# common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/normenmueller/pamela#readme>
-
 dependencies:
   - base >= 4.7 && < 5
   - containers >= 0.6.0.1
@@ -36,7 +26,6 @@ dependencies:
   - typed-process >= 0.2.6.0
   - xml-conduit >= 1.8.0.1
   - xml-types >= 0.3.6
-
 library:
   source-dirs: src
   exposed-modules:
@@ -45,7 +34,6 @@ library:
     - Graph
     - Utils
     - XML
-
 executables:
   pamela:
     main:                Main.hs
@@ -56,7 +44,6 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - pamela
-
 tests:
   pamela-test:
     main:                Spec.hs
