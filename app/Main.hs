@@ -13,13 +13,13 @@ Pamela's entry point.
 module Main where
 
 import           Cmdln
-import           Control.Monad ((=<<))
+import           Control.Monad       ((=<<))
 import           Data.SemVer
-import qualified Data.Text.IO  as TIO
-import qualified Graph         as G
+import qualified Data.Text.IO        as TIO
+import qualified Graph               as G
 import           Options.Applicative
-import           XML           (withStripedSpaces)
-import qualified XML           as X
+import           XML                 (withStripedSpaces)
+import qualified XML                 as X
 
 {------------------------------------------------------------------------------
   Entry
@@ -34,9 +34,9 @@ main = pamela =<< cmdln
 
 pamela :: Opt -> IO ()
 pamela (Opt to from) =
-    withStripedSpaces from $ \p -> do
-         g <- G.fromDocument <$> X.parse p
-         c <- pure $ G.toCypher g
+    withStripedSpaces from $ \f -> do
+         g <- G.fromDocument <$> X.parse f
+         let c = G.toCypher g
          case to of
             Just to -> TIO.writeFile to c
             Nothing -> TIO.putStrLn c

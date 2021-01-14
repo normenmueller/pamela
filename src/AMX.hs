@@ -180,15 +180,15 @@ propertyDefinitions X.Document {..} =
         Nothing -> Map.empty
   where
     z = Map.empty
-    op m e = Map.union m (propertyDefinition e)
+    op m e = maybe m (\(k,v) -> Map.insert k v m) (propertyDefinition e)
 
-propertyDefinition :: X.Node -> Map Pid Val
+propertyDefinition :: X.Node -> Maybe (Pid, Val)
 propertyDefinition (X.NodeElement (X.Element l as cs))
-    | l == lblPropDef =
-        case find (X.hasLabel lblName) cs of
-            Just v -> Map.singleton (Pid $ as ! attId) (text v)
-            Nothing -> Map.empty
-propertyDefinition _ = Map.empty
+    | l == lblPropDef = do
+        n <- find (X.hasLabel lblName) cs
+        v <- X.content n
+        return (Pid $ as ! attId, v)
+    | otherwise = Nothing
 
 {------------------------------------------------------------------------------
   Accessors

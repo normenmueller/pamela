@@ -34,9 +34,7 @@ import           Text.XML             as X
 ------------------------------------------------------------------------------}
 
 -- |Strip any white space between elements.
---
 -- XXX Evil hack! It couldn't be worse! At least we support brackets ;-)
---
 -- Note, whitespace processing must be done /before/ further XML processing.
 withStripedSpaces :: FilePath -> (FilePath -> IO ()) -> IO ()
 withStripedSpaces res act = do
