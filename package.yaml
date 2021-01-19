@@ -26,6 +26,10 @@ dependencies:
   - typed-process >= 0.2.6.0
   - xml-conduit >= 1.8.0.1
   - xml-types >= 0.3.6
+  # for testing only, but added here due to HLS&Vim
+  - hspec
+  - QuickCheck
+  - MissingH
 library:
   source-dirs: src
   exposed-modules:
@@ -54,6 +58,3 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - pamela
-    - hspec
-    - QuickCheck
-    - MissingH

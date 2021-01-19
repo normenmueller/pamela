@@ -12,11 +12,13 @@ Portability : POSIX
 ...
 -}
 module AMX
-    ( Eid(..)
+    ( Pid(..)
+    , Eid(..)
     , Elm(..)
     , Rel(..)
     , Key
     , Val
+    , properties
     , elements
     , relationships
     , propertyDefinitions
@@ -27,6 +29,7 @@ import           Data.List                  (find)
 import           Data.Map                   (Map, (!))
 import qualified Data.Map                   as Map
 import           Data.Maybe
+import           Data.SemVer
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import           Data.String
@@ -95,6 +98,28 @@ type Val = Text
   Types
 ------------------------------------------------------------------------------}
 
+-- |Dublin Core metadata
+data DublinCore =
+    DublinCore
+        { dcSchema        :: Text
+        , dcSchemaVersion :: Version
+        , dcTitle         :: Maybe Text
+        , dcCreator       :: Maybe Text
+        , dcSubject       :: Maybe Text
+        , dcDescription   :: Maybe Text
+        , dcPublisher     :: Maybe Text
+        , dcContributor   :: Maybe Text
+        , dcDate          :: Maybe Text
+        , dctype          :: Maybe Text
+        , dcFormat        :: Maybe Text
+        , dcIdentifier    :: Maybe Text
+        , dcSource        :: Maybe Text
+        , dcLanguage      :: Maybe Text
+        , dcRelation      :: Maybe Text
+        , dcCoverage      :: Maybe Text
+        , dcRights        :: Maybe Text
+        }
+
 -- |An element description
 data Elm =
     Elm
@@ -116,6 +141,45 @@ data Rel =
         , relProp :: Map Key Val
         }
     deriving (Eq, Ord, Show)
+
+{------------------------------------------------------------------------------
+  Properties description
+------------------------------------------------------------------------------}
+
+-- |Model properties
+-- If the property key is already present in the map, the associated value is
+-- replaced with the supplied value. In other words, if a property key occurs
+-- more than once, the last occurrence, according to the XML document structure,
+-- wins.
+properties :: X.Document -> Map Key Val
+properties d@X.Document {..} =
+    case find (X.hasLabel lblProps) (X.elementNodes documentRoot) of
+        Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
+        Nothing -> Map.empty
+  where
+    z = Map.empty
+    op m e =
+        maybe
+            m
+            (\(k, v) -> Map.insert k v m)
+            (property (propertyDefinitions d) e)
+
+property :: Map Pid Val -> X.Node -> Maybe (Key, Val)
+property pds (X.NodeElement (X.Element l as [c]))
+    | l == lblProp = do
+        let k = pds ! Pid (as ! attPropDefRef)
+        v <- X.content c
+        return (k, v)
+    | otherwise = Nothing
+property _ _ = Nothing
+
+{------------------------------------------------------------------------------
+  DC Metadata description
+------------------------------------------------------------------------------}
+
+-- |Model properties
+metadata :: X.Document -> DublinCore
+metadata = undefined
 
 {------------------------------------------------------------------------------
   Element description
@@ -170,6 +234,13 @@ relationship pds (X.Element l as cs)
     | otherwise = Set.empty
 
 {------------------------------------------------------------------------------
+  Organizations description
+------------------------------------------------------------------------------}
+
+organizations :: X.Document -> Tree Text
+organizations = undefined
+
+{------------------------------------------------------------------------------
   Property definitions
 ------------------------------------------------------------------------------}
 
@@ -189,6 +260,7 @@ propertyDefinition (X.NodeElement (X.Element l as cs))
         v <- X.content n
         return (Pid $ as ! attId, v)
     | otherwise = Nothing
+propertyDefinition _ = Nothing
 
 {------------------------------------------------------------------------------
   Accessors
