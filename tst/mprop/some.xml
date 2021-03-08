@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd http://purl.org/dc/elements/1.1/ http://www.opengroup.org/xsd/archimate/3.1/dc.xsd" identifier="id-EAPK_4D4FD0E1_71D1_4822_92C7_49E885C82C71">
-  <name xml:lang="en">in0</name>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd" identifier="id-EAPK_4D4FD0E1_71D1_4822_92C7_49E885C82C71">
+  <name xml:lang="en">some model props</name>
   <properties>
     <property propertyDefinitionRef="propid-1">
       <value xml:lang="en">Dr. Normen Müller</value>
@@ -12,12 +12,6 @@
       <value xml:lang="en">zzz</value>
     </property>
   </properties>
-  <metadata>
-    <schema>Dublin Core</schema>
-    <schemaversion>1.1</schemaversion>
-    <dc:title>A Title</dc:title>
-    <dc:creator>An Author</dc:creator>
-  </metadata>
   <propertyDefinitions>
     <propertyDefinition identifier="propid-3" type="string">
       <name />

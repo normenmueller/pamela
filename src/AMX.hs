@@ -18,6 +18,7 @@ module AMX
     , Rel(..)
     , Key
     , Val
+    , AMX.metadata
     , properties
     , elements
     , relationships
@@ -37,40 +38,45 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import           Data.Tree
 import qualified XML                        as X
+import           Text.XML.Cursor            ((&/), ($/), (>=>))
+import qualified Text.XML.Cursor            as XC
 
 {------------------------------------------------------------------------------
   Type synonyms
 ------------------------------------------------------------------------------}
 
 -- |Property identifier
-newtype Pid =
-    Pid
-        { unPid :: Text
-        }
-    deriving (Eq, Ord, Show)
-
-instance IsString Pid where
-    fromString = Pid . T.pack
+type Pid = Text
+--newtype Pid =
+--    Pid
+--        { unPid :: Text
+--        }
+--    deriving (Eq, Ord, Show)
+--
+--instance IsString Pid where
+--    fromString = Pid . T.pack
 
 -- |Element identifier
-newtype Eid =
-    Eid
-        { unEid :: Text
-        }
-    deriving (Eq, Ord, Show)
-
-instance IsString Eid where
-    fromString = Eid . T.pack
+type Eid = Text
+--newtype Eid =
+--    Eid
+--        { unEid :: Text
+--        }
+--    deriving (Eq, Ord, Show)
+--
+--instance IsString Eid where
+--    fromString = Eid . T.pack
 
 -- |Relationship identifier
-newtype Rid =
-    Rid
-        { unRid :: Text
-        }
-    deriving (Eq, Ord, Show)
-
-instance IsString Rid where
-    fromString = Rid . T.pack
+type Rid = Text
+--newtype Rid =
+--    Rid
+--        { unRid :: Text
+--        }
+--    deriving (Eq, Ord, Show)
+--
+--instance IsString Rid where
+--    fromString = Rid . T.pack
 
 -- |A key
 type Key = Text
@@ -98,27 +104,27 @@ type Val = Text
   Types
 ------------------------------------------------------------------------------}
 
--- |Dublin Core metadata
-data DublinCore =
-    DublinCore
-        { dcSchema        :: Text
-        , dcSchemaVersion :: Version
-        , dcTitle         :: Maybe Text
-        , dcCreator       :: Maybe Text
-        , dcSubject       :: Maybe Text
-        , dcDescription   :: Maybe Text
-        , dcPublisher     :: Maybe Text
-        , dcContributor   :: Maybe Text
-        , dcDate          :: Maybe Text
-        , dctype          :: Maybe Text
-        , dcFormat        :: Maybe Text
-        , dcIdentifier    :: Maybe Text
-        , dcSource        :: Maybe Text
-        , dcLanguage      :: Maybe Text
-        , dcRelation      :: Maybe Text
-        , dcCoverage      :: Maybe Text
-        , dcRights        :: Maybe Text
-        }
+-- |Metadata
+--data Metadata =
+--    DublinCore
+--        { dcSchema        :: Text
+--        , dcSchemaVersion :: Version
+--        , dcTitle         :: Maybe Text
+--        , dcCreator       :: Maybe Text
+--        , dcSubject       :: Maybe Text
+--        , dcDescription   :: Maybe Text
+--        , dcPublisher     :: Maybe Text
+--        , dcContributor   :: Maybe Text
+--        , dcDate          :: Maybe Text
+--        , dctype          :: Maybe Text
+--        , dcFormat        :: Maybe Text
+--        , dcIdentifier    :: Maybe Text
+--        , dcSource        :: Maybe Text
+--        , dcLanguage      :: Maybe Text
+--        , dcRelation      :: Maybe Text
+--        , dcCoverage      :: Maybe Text
+--        , dcRights        :: Maybe Text
+--        }
 
 -- |An element description
 data Elm =
@@ -164,12 +170,28 @@ properties d@X.Document {..} =
             (\(k, v) -> Map.insert k v m)
             (property (propertyDefinitions d) e)
 
+-- Semantically equivalent to 'properties' but realized with XPath axis
+properties' :: X.Document -> Map Key Val
+properties' d@X.Document {..} =
+    Map.fromList
+        (catMaybes $
+         property (propertyDefinitions d) . XC.node <$>
+         (model $/ axProperties &/ axProperty))
+  where
+    model = XC.fromDocument d
+    axProperties = XC.element lblProps
+    axProperty = XC.element lblProp
+    axValue = XC.element lblVal
+
 property :: Map Pid Val -> X.Node -> Maybe (Key, Val)
-property pds (X.NodeElement (X.Element l as [c]))
-    | l == lblProp = do
-        let k = pds ! Pid (as ! attPropDefRef)
-        v <- X.content c
-        return (k, v)
+property pds (X.NodeElement (X.Element l as cs))
+    | l == lblProp =
+        case find (X.hasLabel lblVal) cs of
+            Just e -> do
+                let k = pds ! (as ! attPropDefRef)
+                v <- X.content e
+                return (k, v)
+            Nothing -> Nothing
     | otherwise = Nothing
 property _ _ = Nothing
 
@@ -177,9 +199,21 @@ property _ _ = Nothing
   DC Metadata description
 ------------------------------------------------------------------------------}
 
--- |Model properties
-metadata :: X.Document -> DublinCore
-metadata = undefined
+-- |Model metadata
+metadata :: X.Document -> Map Key Val
+metadata d@X.Document {..} =
+    case find (X.hasLabel lblMeta) (X.elementNodes documentRoot) of
+        Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
+        Nothing -> Map.empty
+  where
+    z = Map.empty
+    op m e = maybe m (\(k, v) -> Map.insert k v m) (dcelem e)
+
+dcelem :: X.Node -> Maybe (Key, Val)
+dcelem e@(X.NodeElement (X.Element l as cs)) = do
+    v <- X.content e
+    return (X.nameLocalName l, v)
+dcelem _ = Nothing
 
 {------------------------------------------------------------------------------
   Element description
@@ -201,7 +235,7 @@ element pds (X.Element l as cs)
         case find (X.hasLabel lblName) cs of
             Just n ->
                 Set.singleton $
-                Elm (Eid $ as ! attId) (text n) (as ! attType) (props pds cs)
+                Elm (as ! attId) (text n) (as ! attType) (props pds cs)
             Nothing -> error "Invalid AMX!"
     | otherwise = Set.empty
 
@@ -225,11 +259,11 @@ relationship pds (X.Element l as cs)
     | l == lblRel =
         Set.singleton $
         Rel
-            (Rid $ as ! attId)
+            (as ! attId)
             (text <$> find (X.hasLabel lblName) cs)
             (as ! attType)
-            (Eid $ as ! attSrc)
-            (Eid $ as ! attTgt)
+            (as ! attSrc)
+            (as ! attTgt)
             (props pds cs)
     | otherwise = Set.empty
 
@@ -258,7 +292,7 @@ propertyDefinition (X.NodeElement (X.Element l as cs))
     | l == lblPropDef = do
         n <- find (X.hasLabel lblName) cs
         v <- X.content n
-        return (Pid $ as ! attId, v)
+        return (as ! attId, v)
     | otherwise = Nothing
 propertyDefinition _ = Nothing
 
@@ -291,7 +325,7 @@ props pds ns =
 
 prop :: Map Pid Val -> X.Element -> Map Key Val
 prop pds (X.Element l as [c])
-    | l == lblProp = Map.singleton (pds ! Pid (as ! attPropDefRef)) (text c)
+    | l == lblProp = Map.singleton (pds ! (as ! attPropDefRef)) (text c)
 prop _ _ = Map.empty
 
 {------------------------------------------------------------------------------
@@ -323,6 +357,13 @@ attPropDefRef :: X.Name
 attPropDefRef = "propertyDefinitionRef"
 
 -- Labels
+
+lblMeta :: X.Name
+lblMeta =
+    X.Name
+        "metadata"
+        (Just "http://www.opengroup.org/xsd/archimate/3.0/")
+        Nothing
 
 lblOrgs :: X.Name
 lblOrgs =
@@ -398,6 +439,13 @@ lblName :: X.Name
 lblName =
     X.Name
         "name"
+        (Just "http://www.opengroup.org/xsd/archimate/3.0/")
+        Nothing
+
+lblVal :: X.Name
+lblVal =
+    X.Name
+        "value"
         (Just "http://www.opengroup.org/xsd/archimate/3.0/")
         Nothing
 

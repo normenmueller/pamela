@@ -1,6 +1,6 @@
 #!/bin/bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-LIB=${HOME}/z/haskell-lts-16.26
+LIB=${HOME}/z/haskell-lts-17.4
 
 mkdir -p ${LIB}
 

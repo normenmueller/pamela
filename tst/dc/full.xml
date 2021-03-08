@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd http://purl.org/dc/elements/1.1/ http://www.opengroup.org/xsd/archimate/3.1/dc.xsd" identifier="id-EAPK_4D4FD0E1_71D1_4822_92C7_49E885C82C71">
+  <name xml:lang="en">all DC</name>
+  <metadata>
+    <schema>Dublin Core</schema>
+    <schemaversion>1.1</schemaversion>
+    <dc:title>A title</dc:title>
+    <dc:creator>A creator</dc:creator>
+    <dc:subject>A subject</dc:subject>
+    <dc:description>A description</dc:description>
+    <dc:publisher>A publisher</dc:publisher>
+    <dc:contributor>A contributor</dc:contributor>
+    <dc:date>A date</dc:date>
+    <dc:type>A type</dc:type>
+    <dc:format>A format</dc:format>
+    <dc:identifier>An identifier</dc:identifier>
+    <dc:source>A source</dc:source>
+    <dc:language>A language</dc:language>
+    <dc:relation>A relation</dc:relation>
+    <dc:coverage>A coverage</dc:coverage>
+    <dc:rights>A right</dc:rights>
+  </metadata>
+</model>

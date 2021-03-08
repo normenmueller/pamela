@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="pamela" id="id-EAPK_4D4FD0E1_71D1_4822_92C7_49E885C82C71" version="4.6.0">
+  <folder name="Strategy" id="id-2a97aa4b7a104b6c984109b647aea7e1" type="strategy">
+    <element xsi:type="archimate:Capability" name="Capability" id="id-89c59299885d4dd9947c9f710651359d"/>
+  </folder>
+  <folder name="Business" id="id-59b14be7631e465797edbca778510311" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Business Actor" id="id-b8374fa1db934432987b9e8479491096"/>
+  </folder>
+  <folder name="Application" id="id-d944d7fed1574a5ba3e2821824862bb6" type="application">
+    <element xsi:type="archimate:ApplicationComponent" name="Application Component" id="id-625ec0f80cd6457da3b5cdc7580ac3f8"/>
+  </folder>
+  <folder name="Technology &amp; Physical" id="id-6d6c2548e74e4701af97e40297d06526" type="technology">
+    <element xsi:type="archimate:Node" name="Node" id="id-271bc7b7ca184ff084f54c3721a8651b"/>
+  </folder>
+  <folder name="Motivation" id="id-a621eedc9d044466b874198a3998e519" type="motivation">
+    <element xsi:type="archimate:Stakeholder" name="Stakeholder" id="id-20982003148544fda7dd159618b80ddd"/>
+  </folder>
+  <folder name="Implementation &amp; Migration" id="id-8bd93bd3f1c54a888d0373fb7e1bf1ea" type="implementation_migration">
+    <element xsi:type="archimate:WorkPackage" name="Work Package" id="id-92b6564e54744f05b8a83ecf1c8e0c3e"/>
+  </folder>
+  <folder name="Other" id="id-7b40ad51f9b341378a96396c1e44f9d2" type="other">
+    <element xsi:type="archimate:Location" name="Location" id="id-1fb46ba5db994b99bb1a6f61c4b32318"/>
+  </folder>
+  <folder name="Relations" id="id-13f2fa3224ba4561b6c34ff31a034d07" type="relations">
+    <folder name="New Folder" id="id-993b46e75d6f4190981541bed0ef9c5e"/>
+  </folder>
+  <folder name="Views" id="id-5cdd7f24baa24bd4851f5741463841c8" type="diagrams">
+    <folder name="New Folder2" id="id-bc90d0783810431ebe02881a3f5f634f"/>
+  </folder>
+</archimate:model>

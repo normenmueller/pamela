@@ -44,7 +44,7 @@ cqlElms g = foldl (\acc (_, e) -> cqlElm e : acc) [] $ I.labNodes g
 
 cqlElm :: A.Elm -> Text
 cqlElm e =
-    let id = T.replace "-" "_" $ A.unEid . elmID $ e
+    let id = T.replace "-" "_" $ elmID e
         ty = elmType e
         ps =
             T.intercalate "," $
@@ -59,8 +59,8 @@ cqlRel :: A.Rel -> Text
 cqlRel e =
     let id = T.replace "-" "_" $ fromMaybe T.empty $ relName e
         ty = relType e
-        src = T.replace "-" "_" $ A.unEid . relSrc $ e
-        tgt = T.replace "-" "_" $ A.unEid . relTgt $ e
+        src = T.replace "-" "_" $ relSrc e
+        tgt = T.replace "-" "_" $ relTgt e
         ps =
             T.intercalate "," $
             (\(k, v) -> k <> ":" <> cqlPropV v) <$> Map.assocs (relProp e)
