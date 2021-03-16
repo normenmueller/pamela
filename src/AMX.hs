@@ -104,28 +104,6 @@ type Val = Text
   Types
 ------------------------------------------------------------------------------}
 
--- |Metadata
---data Metadata =
---    DublinCore
---        { dcSchema        :: Text
---        , dcSchemaVersion :: Version
---        , dcTitle         :: Maybe Text
---        , dcCreator       :: Maybe Text
---        , dcSubject       :: Maybe Text
---        , dcDescription   :: Maybe Text
---        , dcPublisher     :: Maybe Text
---        , dcContributor   :: Maybe Text
---        , dcDate          :: Maybe Text
---        , dctype          :: Maybe Text
---        , dcFormat        :: Maybe Text
---        , dcIdentifier    :: Maybe Text
---        , dcSource        :: Maybe Text
---        , dcLanguage      :: Maybe Text
---        , dcRelation      :: Maybe Text
---        , dcCoverage      :: Maybe Text
---        , dcRights        :: Maybe Text
---        }
-
 -- |An element description
 data Elm =
     Elm
