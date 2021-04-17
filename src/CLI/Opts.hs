@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-|
-Module      : Cmdln
+Module      : Opts
 Description : ...
-Copyright   : (c) Normen Müller, 2020
+Copyright   : (c) Normen Müller
 License     : BSD3
 Maintainer  : normen.mueller@gmail.com
 Stability   : experimental
@@ -10,9 +10,9 @@ Portability : POSIX
 
 ...
 -}
-module Cmdln
+module CLI.Opts
     ( Opt(..)
-    , cmdln
+    , options
     ) where
 
 import           Data.Semigroup        ((<>))
@@ -28,8 +28,8 @@ data Opt =
         , optSrc :: FilePath
         }
 
-cmdln :: IO Opt
-cmdln =
+options :: IO Opt
+options =
     execParser $
     info
         (helper <*> veropt <*> opts)

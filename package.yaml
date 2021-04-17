@@ -33,11 +33,12 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
-    - AMX
-    - Cmdln
-    - Graph
-    - Utils
-    - XML
+    - CLI.Opts
+    - Data.Commons
+    - Data.Graph.Inductive.Parser
+    - Data.Graph.Inductive.Renderer
+    - Text.XML.AMX
+    - Text.XML.Plain
 executables:
   pamela:
     main:                Main.hs

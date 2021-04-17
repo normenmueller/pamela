@@ -1,7 +1,7 @@
 {-|
-Module      : Utils
+Module      : Commons
 Description : ...
-Copyright   : (c) Normen Müller, 2020
+Copyright   : (c) Normen Müller
 License     : BSD3
 Maintainer  : normen.mueller@gmail.com
 Stability   : experimental
@@ -9,7 +9,7 @@ Portability : POSIX
 
 ...
 -}
-module Utils where
+module Data.Commons where
 
 import Control.Monad (mfilter)
 import Data.Maybe

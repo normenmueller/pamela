@@ -1,7 +1,7 @@
 {-|
-Module      : XML
+Module      : Plain
 Description : Utilities for pure XML. No further underlying semantics assumed.
-Copyright   : (c) Normen Müller, 2020
+Copyright   : (c) Normen Müller
 License     : BSD3
 Maintainer  : normen.mueller@gmail.com
 Stability   : experimental
@@ -9,7 +9,7 @@ Portability : POSIX
 
 ...
 -}
-module XML
+module Text.XML.Plain
     ( module X
     , withStripedSpaces
     , parse

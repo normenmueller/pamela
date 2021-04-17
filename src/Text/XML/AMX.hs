@@ -3,22 +3,18 @@
 {-|
 Module      : AMX
 Description : ...
-Copyright   : (c) Normen Müller, 2020
+Copyright   : (c) Normen Müller
 License     : BSD3
 Maintainer  : normen.mueller@gmail.com
 Stability   : experimental
 Portability : POSIX
 
-...
+Utilities for _A_rchiMate _m_odel e_x_change file format.
 -}
-module AMX
-    ( Pid(..)
-    , Eid(..)
-    , Elm(..)
+module Text.XML.AMX
+    ( Elm(..)
     , Rel(..)
-    , Key
-    , Val
-    , AMX.metadata
+    , Text.XML.AMX.metadata
     , properties
     , elements
     , relationships
@@ -37,9 +33,9 @@ import           Data.String
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import           Data.Tree
-import qualified XML                        as X
 import           Text.XML.Cursor            ((&/), ($/), (>=>))
 import qualified Text.XML.Cursor            as XC
+import qualified Text.XML.Plain             as X
 
 {------------------------------------------------------------------------------
   Type synonyms
@@ -139,7 +135,7 @@ properties :: X.Document -> Map Key Val
 properties d@X.Document {..} =
     case find (X.hasLabel lblProps) (X.elementNodes documentRoot) of
         Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
-        Nothing -> Map.empty
+        _ -> Map.empty
   where
     z = Map.empty
     op m e =
@@ -182,7 +178,7 @@ metadata :: X.Document -> Map Key Val
 metadata d@X.Document {..} =
     case find (X.hasLabel lblMeta) (X.elementNodes documentRoot) of
         Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
-        Nothing -> Map.empty
+        _ -> Map.empty
   where
     z = Map.empty
     op m e = maybe m (\(k, v) -> Map.insert k v m) (dcelem e)
@@ -201,7 +197,7 @@ elements :: X.Document -> Set Elm
 elements d@X.Document {..} =
      case find (X.hasLabel lblElems) (X.elementNodes documentRoot) of
           Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
-          Nothing -> Set.empty
+          _ -> Set.empty
   where
     z = Set.empty
     op m (X.NodeElement e) = Set.union m (element (propertyDefinitions d) e)
@@ -225,7 +221,7 @@ relationships :: X.Document -> Set Rel
 relationships d@X.Document {..} =
     case find (X.hasLabel lblRels) (X.elementNodes documentRoot) of
         Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
-        Nothing -> Set.empty
+        _ -> Set.empty
   where
     z = Set.empty
     op m (X.NodeElement e) =
@@ -260,7 +256,7 @@ propertyDefinitions :: X.Document -> Map Pid Val
 propertyDefinitions X.Document {..} =
     case find (X.hasLabel lblPropDefs) (X.elementNodes documentRoot) of
         Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
-        Nothing -> Map.empty
+        _ -> Map.empty
   where
     z = Map.empty
     op m e = maybe m (\(k,v) -> Map.insert k v m) (propertyDefinition e)
@@ -295,7 +291,7 @@ props ::  Map Pid Val -> [X.Node] -> Map Key Val
 props pds ns =
     case find (X.hasLabel lblProps) ns of
         Just (X.NodeElement e) -> foldl op z $ X.elementNodes e
-        Nothing -> z
+        _ -> z
   where
     z = Map.empty
     op m (X.NodeElement e) = Map.union m (prop pds e)
