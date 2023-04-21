@@ -1,12 +1,9 @@
+*~
+*.iml
+*.cabal
+.idea/
 .lib/
 .stack-work/
-
-tst/*.xsd
-tst/*.txt
-tst/*.xml
-
-*~
+out/
 tags
-out.txt
 pamela.cabal
-stack.yaml.lock
