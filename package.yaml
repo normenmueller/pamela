@@ -20,8 +20,9 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/normenmueller/pamela#readme>
 
 dependencies:
-- base >= 4.7 && < 5
-- optparse-applicative == 0.17.0.0
+  - base >= 4.7 && < 5
+  - optparse-applicative == 0.17.0.0
+  - semver == 0.4.0.1
 
 library:
   source-dirs: src

@@ -2,5 +2,7 @@ module Main where
 
 import Pamela
 
+import Control.Monad
+
 main :: IO ()
-main = undefined
+main = void cmdln
